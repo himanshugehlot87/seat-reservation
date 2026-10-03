@@ -257,7 +257,7 @@ FROM seats
 WHERE show_id = :showId
   AND seat_number IN (:seatNumbers)
 ORDER BY seat_number
-FOR UPDATE;
+    FOR UPDATE;
 ```
 
 The requested seat rows are locked before checking or changing their status.
@@ -726,7 +726,8 @@ docker compose up --build
 The project contains a Python burst test under:
 
 ```text
-scripts/burst_test.py
+scripts/burst_same_seat.py
+scripts/burst_per_user.py
 ```
 
 The script sends concurrent reservation requests using Python `ThreadPoolExecutor`.
@@ -751,7 +752,7 @@ Total requests : 100
 Other responses: 0
 ```
 
-This demonstrates that only one concurrent request successfully reserved the same seat.
+This demonstrates that only one concurrent request successfully reserved the same seat. The final test was executed against the public Render deployment.
 
 ### Per-User Limit Test
 
@@ -767,12 +768,12 @@ Multiple seats
 Observed result:
 
 ```text
-201 Created    : 3
-409 Conflict   : 97
+201 Created    : 4
+409 Conflict   : 96
 Other responses: 0
 ```
 
-The resulting show state contained four confirmed seats for the test user, consistent with the configured per-user limit of four seats.
+The resulting show state contained four confirmed seats for the test user, consistent with the configured per-user limit of four seats. The final test was executed against the public Render deployment.
 
 ## Idempotency Testing
 
@@ -802,7 +803,7 @@ Example response:
 
 ```json
 {
-  "reservation_id": 4,
+  "reservation_id": 8,
   "status": "CANCELLED",
   "message": "Reservation cancelled successfully"
 }

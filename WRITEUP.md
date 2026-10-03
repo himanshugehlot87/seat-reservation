@@ -47,7 +47,7 @@ FROM seats
 WHERE show_id = :showId
   AND seat_number IN (:seatNumbers)
 ORDER BY seat_number
-FOR UPDATE;
+    FOR UPDATE;
 ```
 
 `FOR UPDATE` locks the selected database rows for the duration of the transaction.
@@ -180,9 +180,9 @@ To prevent this, the application uses a PostgreSQL transaction-level advisory lo
 
 ```sql
 SELECT pg_advisory_xact_lock(
-    hashtext(:userId),
-    CAST(:showId AS INTEGER)
-);
+               hashtext(:userId),
+               CAST(:showId AS INTEGER)
+       );
 ```
 
 This serializes reservation operations for the same user and show while allowing unrelated users to continue concurrently.
@@ -336,7 +336,7 @@ This demonstrates that under the tested concurrency:
 - competing requests received `409 Conflict`;
 - no unexpected HTTP responses occurred.
 
-The test was executed against the Dockerized application.
+The final test was executed against the public Render deployment.
 
 ---
 
@@ -344,9 +344,16 @@ The test was executed against the Dockerized application.
 
 A second concurrency test used the same authenticated user while multiple requests attempted reservations for seats in the same show.
 
-The tested show ultimately contained four confirmed seats and one available seat.
+The final deployed test produced:
 
-This is consistent with the configured per-user limit of four seats.
+```text
+Total requests : 100
+201 Created    : 4
+409 Conflict   : 96
+Other responses: 0
+```
+
+This confirms that concurrent requests from the same user/show did not bypass the configured per-user limit of four seats.
 
 The important property is that concurrent requests from the same user/show are serialized by the PostgreSQL advisory transaction lock before the limit is evaluated.
 
@@ -380,13 +387,24 @@ The API returned:
 
 ```json
 {
-  "reservation_id": 4,
+  "reservation_id": 8,
   "status": "CANCELLED",
   "message": "Reservation cancelled successfully"
 }
 ```
 
 After cancellation, the cancelled reservation's seat became available again.
+
+For the deployed cancellation test, Show 3 returned:
+
+```text
+totalSeats     = 3
+availableSeats = 3
+heldSeats      = 0
+confirmedSeats = 0
+```
+
+The seat-count invariant remained valid.
 
 The show state maintained the invariant:
 

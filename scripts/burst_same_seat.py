@@ -1,7 +1,7 @@
 import concurrent.futures
 import requests
 
-URL = "http://localhost:8080/shows/4/reserve"
+URL = "https://seat-reservation-97kv.onrender.com/shows/2/reserve"
 TOTAL_REQUESTS = 100
 
 
